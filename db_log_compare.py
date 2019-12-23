@@ -61,10 +61,12 @@ def compare_log(export_logs, import_logs):
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print("使用方法: python3 db_log_compare.py exportlogfile importlogfiel")
+        print("使用方法: python3 db_log_compare.py exportlogfile importlogfile")
         exit()
-    exportlogs = parse_source_log()
-    importlogs = parse_source_log("netbank_zl_import.log")
+    exportlogfile = sys.argv[1]
+    importlogfile = sys.argv[2]
+    exportlogs = parse_source_log(exportlogfile)
+    importlogs = parse_source_log(importlogfile)
     print(len(exportlogs))
     if len(exportlogs) != len(importlogs):
         print("导出导入数据表数量不一致" + " 导出表:" + str(len(exportlogs)) + " 导入表：" + str(len(importlogs)))
