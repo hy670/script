@@ -30,23 +30,60 @@ def parse_source_log(pwd="netbank_zl.log"):
     return log
 
 
+def parse_import_log(pwd="netbank_zl.log"):
+    try:
+        f = open(pwd, 'r', encoding='gb2312')
+    except Exception as exc:
+        print("文件打开失败：" + str(exc))
+        exit()
+    log = []
+    for line in f.readlines():
+        if line.startswith(". ."):
+            linesplite = line.strip().split(" ")
+            while "" in linesplite:
+                linesplite.remove("")
+            while "." in linesplite:
+                linesplite.remove(".")
+            username = linesplite[1].split("\"")[1]
+            tablename = linesplite[1].split("\"")[3]
+            rows = linesplite[4]
+            log.append(Table(username=username, tablename=tablename, rows=rows))
+    return log
+
+
 def compare_log(export_logs, import_logs):
-    print('{:^10}{:^30}{:^20}{:^20}{:^20}'.format("用户名", "表名", "导出条数", "导入条数", "是否一致"))
+    print('{:^10}{:^10}{:^30}{:^20}{:^20}{:^20}'.format("导入用户", "导出用户", "表名", "导出条数", "导入条数", "是否一致"))
     tempexportlogs = export_logs[:]
     match_num = 0
     unmath_num = 0
     for exportlog in export_logs:
         for importlog in import_logs:
-            if exportlog.username == exportlog.username and exportlog.tablename == importlog.tablename:
+            if exportlog.username == "NETBANK02" and importlog.username == 'NETBANK' and exportlog.tablename == importlog.tablename:
                 if exportlog.rows == importlog.rows:
                     print(
-                        '{:^10}{:^30}{:^20}{:^20}{:^20}'.format(exportlog.username, exportlog.tablename, exportlog.rows,
-                                                                importlog.rows, "Y"))
+                        '{:^10}{:^10}{:^30}{:^20}{:^20}{:^20}'.format(exportlog.username, importlog.username,
+                                                                      exportlog.tablename, exportlog.rows,
+                                                                      importlog.rows, "Y"))
                     match_num = match_num + 1
                 elif exportlog.rows != importlog.rows:
                     print(
-                        '{:^10}{:^30}{:^20}{:^20}{:^20}'.format(exportlog.username, exportlog.tablename, exportlog.rows,
-                                                                importlog.rows, "N"))
+                        '{:^10}{:^10}{:^30}{:^20}{:^20}{:^20}'.format(exportlog.username, importlog.username,
+                                                                      exportlog.tablename, exportlog.rows,
+                                                                      importlog.rows, "N"))
+                    unmath_num = unmath_num + 1
+                tempexportlogs.remove(exportlog)
+            elif exportlog.username == "PAY02" and importlog.username == 'NETPAY' and exportlog.tablename == importlog.tablename:
+                if exportlog.rows == importlog.rows:
+                    print(
+                        '{:^10}{:^10}{:^30}{:^20}{:^20}{:^20}'.format(exportlog.username, importlog.username,
+                                                                      exportlog.tablename, exportlog.rows,
+                                                                      importlog.rows, "Y"))
+                    match_num = match_num + 1
+                elif exportlog.rows != importlog.rows:
+                    print(
+                        '{:^10}{:^10}{:^30}{:^20}{:^20}{:^20}'.format(exportlog.username, importlog.username,
+                                                                      exportlog.tablename, exportlog.rows,
+                                                                      importlog.rows, "N"))
                     unmath_num = unmath_num + 1
                 tempexportlogs.remove(exportlog)
 
@@ -60,14 +97,14 @@ def compare_log(export_logs, import_logs):
 
 
 if __name__ == "__main__":
+
     if len(sys.argv) < 3:
         print("使用方法: python3 db_log_compare.py exportlogfile importlogfile")
         exit()
     exportlogfile = sys.argv[1]
     importlogfile = sys.argv[2]
     exportlogs = parse_source_log(exportlogfile)
-    importlogs = parse_source_log(importlogfile)
-    print(len(exportlogs))
+    importlogs = parse_import_log(importlogfile)
     if len(exportlogs) != len(importlogs):
         print("导出导入数据表数量不一致" + " 导出表:" + str(len(exportlogs)) + " 导入表：" + str(len(importlogs)))
         exit()
